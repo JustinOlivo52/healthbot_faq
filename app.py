@@ -8,7 +8,7 @@ from openai import OpenAI
 # Config
 # -----------------------------
 EMBED_MODEL = "text-embedding-3-small"
-CHAT_MODEL  = "gpt-4.1-mini"
+CHAT_MODEL  = "gpt-4o-mini"
 
 # Read key from env or Streamlit Cloud Secrets
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
