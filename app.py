@@ -14,9 +14,9 @@ CHAT_MODEL  = "gpt-4o-mini"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-st.set_page_config(page_title="Healthcare FAQ RAG (Demo)", page_icon="🩺", layout="centered")
-st.title("🩺 Healthcare FAQ — RAG Demo")
-st.caption("Educational only — not medical advice. Answers cite the sources shown below.")
+st.set_page_config(page_title="Healthcare FAQ Bot", page_icon="🩺", layout="centered")
+st.title("🩺 Healthcare FAQ Bot")
+st.caption("Ask a health question and get a cited answer. Educational only — not medical advice.")
 
 # -----------------------------
 # Tiny knowledge base
@@ -113,23 +113,50 @@ def answer(query: str, k: int = 2) -> str:
 # -----------------------------
 # UI
 # -----------------------------
-with st.form("ask"):
-    q = st.text_input("Ask a question", placeholder="e.g., How many days a week should I exercise as a beginner?")
-    k = st.slider("Sources to use (k)", 1, 4, 2)
-    submitted = st.form_submit_button("Get Answer")
+if not OPENAI_API_KEY:
+    st.error("Missing OPENAI_API_KEY. Set it in your environment or Streamlit secrets.")
+    st.stop()
 
-if submitted:
-    if not OPENAI_API_KEY:
-        st.error("Missing OPENAI_API_KEY. Set it in your environment or Streamlit secrets.")
-    elif not q.strip():
-        st.warning("Please enter a question.")
-    else:
+with st.sidebar:
+    st.markdown("### About")
+    st.markdown(
+        "This app uses **RAG (Retrieval-Augmented Generation)** to answer basic healthcare questions. "
+        "It searches a knowledge base of FAQs and uses GPT to write a cited answer grounded in those sources."
+    )
+    st.divider()
+    k = st.slider("Number of sources", 1, 4, 2)
+    if st.button("Clear conversation"):
+        st.session_state.messages = []
+        st.rerun()
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if not st.session_state.messages:
+    with st.chat_message("assistant"):
+        st.write("Hi! I'm a healthcare FAQ assistant. Ask me about hydration, sleep, fever, or exercise and I'll answer with cited sources.")
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+        if msg["role"] == "assistant" and msg.get("hits"):
+            with st.expander("Sources"):
+                for i, (_, f) in enumerate(msg["hits"], 1):
+                    st.markdown(f"**[{i}] {f['title']}** — {f['id']}")
+                    st.write(f["text"])
+
+if prompt := st.chat_input("Ask a health question…"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.write(prompt)
+
+    with st.chat_message("assistant"):
         with st.spinner("Thinking…"):
-            reply, hits = answer(q.strip(), k=k)
-        st.subheader("Answer")
+            reply, hits = answer(prompt, k=k)
         st.write(reply)
-
         with st.expander("Sources"):
             for i, (_, f) in enumerate(hits, 1):
                 st.markdown(f"**[{i}] {f['title']}** — {f['id']}")
                 st.write(f["text"])
+
+    st.session_state.messages.append({"role": "assistant", "content": reply, "hits": hits})
