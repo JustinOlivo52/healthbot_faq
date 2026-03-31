@@ -8,7 +8,7 @@ from openai import OpenAI
 # Config
 # -----------------------------
 EMBED_MODEL = "text-embedding-3-small"
-CHAT_MODEL  = "gpt-4.1-mini"
+CHAT_MODEL  = "gpt-4o-mini"
 
 # Read key from env or Streamlit Cloud Secrets
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
@@ -113,23 +113,40 @@ def answer(query: str, k: int = 2) -> str:
 # -----------------------------
 # UI
 # -----------------------------
-with st.form("ask"):
-    q = st.text_input("Ask a question", placeholder="e.g., How many days a week should I exercise as a beginner?")
+if not OPENAI_API_KEY:
+    st.error("Missing OPENAI_API_KEY. Set it in your environment or Streamlit secrets.")
+    st.stop()
+
+with st.sidebar:
     k = st.slider("Sources to use (k)", 1, 4, 2)
-    submitted = st.form_submit_button("Get Answer")
+    if st.button("Clear conversation"):
+        st.session_state.messages = []
+        st.rerun()
 
-if submitted:
-    if not OPENAI_API_KEY:
-        st.error("Missing OPENAI_API_KEY. Set it in your environment or Streamlit secrets.")
-    elif not q.strip():
-        st.warning("Please enter a question.")
-    else:
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+        if msg["role"] == "assistant" and msg.get("hits"):
+            with st.expander("Sources"):
+                for i, (_, f) in enumerate(msg["hits"], 1):
+                    st.markdown(f"**[{i}] {f['title']}** — {f['id']}")
+                    st.write(f["text"])
+
+if prompt := st.chat_input("Ask a health question…"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.write(prompt)
+
+    with st.chat_message("assistant"):
         with st.spinner("Thinking…"):
-            reply, hits = answer(q.strip(), k=k)
-        st.subheader("Answer")
+            reply, hits = answer(prompt, k=k)
         st.write(reply)
-
         with st.expander("Sources"):
             for i, (_, f) in enumerate(hits, 1):
                 st.markdown(f"**[{i}] {f['title']}** — {f['id']}")
                 st.write(f["text"])
+
+    st.session_state.messages.append({"role": "assistant", "content": reply, "hits": hits})
