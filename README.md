@@ -1,7 +1,7 @@
 # 🩺 Healthcare FAQ Bot (RAG Demo)
 
-This is a simple **Retrieval-Augmented Generation (RAG)** chatbot built with **Streamlit** and **OpenAI**.  
-It answers basic healthcare FAQ questions (hydration, fever, sleep, exercise) using a small knowledge base and provides **cited sources** for every answer.
+A **Retrieval-Augmented Generation (RAG)** chatbot built with **Streamlit** and **OpenAI**.
+Ask health questions about hydration, fever, sleep, or exercise and get concise, cited answers grounded in a curated FAQ knowledge base.
 
 ⚠️ **Disclaimer:** This app is for educational purposes only and does **not** provide medical advice. Always consult a qualified healthcare provider for health concerns.
 
@@ -13,18 +13,19 @@ Try it live on Streamlit Cloud: [Healthcare FAQ Bot](https://healthbotfaq.stream
 ---
 
 ## ✨ Features
-- Uploads a small healthcare FAQ knowledge base
-- Embeds documents with OpenAI embeddings (`text-embedding-3-small`)
+- Multi-turn conversation history — ask follow-up questions naturally
+- Embeds a healthcare FAQ knowledge base using OpenAI embeddings (`text-embedding-3-small`)
 - Retrieves the most relevant FAQs using cosine similarity
-- Provides concise, grounded answers with inline **citations [1], [2]**
-- Built with **Streamlit** for a clean web app interface
+- Generates concise, grounded answers with inline **citations [1], [2]**
+- Sources expander on every answer so you can verify what the bot used
+- Built with **Streamlit** for a clean, chat-style web interface
 
 ---
 
 ## 🛠️ Tech Stack
-- [Streamlit](https://streamlit.io/) → frontend & UI
-- [OpenAI API](https://platform.openai.com/) → embeddings + GPT model
-- [NumPy](https://numpy.org/) → vector math
+- [Streamlit](https://streamlit.io/) → frontend & chat UI
+- [OpenAI API](https://platform.openai.com/) → embeddings (`text-embedding-3-small`) + chat (`gpt-4o-mini`)
+- [NumPy](https://numpy.org/) → vector math / cosine similarity
 - Python 3.9+
 
 ---
@@ -33,5 +34,33 @@ Try it live on Streamlit Cloud: [Healthcare FAQ Bot](https://healthbotfaq.stream
 
 1. Clone this repo:
    ```bash
-   git clone https://github.com/your-username/healthcare-faq-bot.git
-   cd healthcare-faq-bot
+   git clone https://github.com/JustinOlivo52/healthbot_faq.git
+   cd healthbot_faq
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Set your OpenAI API key:
+   ```bash
+   export OPENAI_API_KEY=your-key-here
+   ```
+
+4. Run the app:
+   ```bash
+   streamlit run app.py
+   ```
+
+---
+
+## 🔑 Deploying to Streamlit Cloud
+
+1. Push this repo to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io) and connect the repo
+3. In **Settings → Secrets**, add:
+   ```toml
+   OPENAI_API_KEY = "sk-..."
+   ```
+4. Deploy — the app will be live at your Streamlit Cloud URL
